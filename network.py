@@ -8,11 +8,11 @@ import sys
 import lmdb
 import time
 
+# Setup Caffe    
 caffe_dir = '/home/aaskov/caffe/'
-os.chdir(caffe_dir)
-sys.path.insert(0, './python')
+sys.path.insert(0, caffe_dir + 'python')
 import caffe
-
+caffe.set_mode_cpu()
 
 #%%
 
@@ -206,7 +206,7 @@ class Network(object):
         net_std = self.__est_std__(wanted_layer, with_bias)
         
         for layer, dim in self.caffe_net.params.items():
-            if layer in wanted_layer:
+            if layer in wanted_layer and std > 0.0:
                 weight_shape = dim[0].data.shape
                 bias_shape = dim[1].data.shape
     
@@ -349,8 +349,9 @@ class Network(object):
 
 
 #%%
-if __name__ == "__main__":
+if __name__ == "__main__" and __package__ is None:
     print 'This file contains the network class'
-
-    caffe.set_mode_cpu()
+    
+    # Define a network class
     net = Network(prototxt='/home/aaskov/caffe/examples/cifar10/cifar10_full.prototxt', caffemodel='/home/aaskov/caffe/examples/cifar10/bkp_cifar10_full_converge_002/cifar10_full_iter_100000.caffemodel.h5', meanfile='/home/aaskov/caffe/examples/cifar10/mean.binaryproto', path_to_data='/home/aaskov/caffe/examples/cifar10/cifar10_train_lmdb/')
+

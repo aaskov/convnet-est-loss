@@ -3,7 +3,6 @@
 convnet-est-loss
 """
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import sys
 import lmdb
@@ -18,18 +17,19 @@ import caffe
 #%%
 
 class Network(object):	
-    """Example text text text text.
+    """Network class module.
 
-    Text text text text text text text text text text text text text text text
-    text text text text.
+    This class contains all the necessary settings and functions to setup and
+    run a convnet for experimentation.
 
     Note:
         Text `self` text ``Args`` section.
 
     Args:
-        param1 (str): Text of `param1`.
-        param2 (Optional[int]): Text of `param2`.
-        param3 (List[str]): Text of `param3`.
+        prototxt (str): Path to the `.prototxt` file.\n
+        caffemodel (str): Path to the `.caffemodel` file (trained network).\n
+        meanfile (str): Path to the mean file `mean.binaryproto`.\n
+        path_to_data (str): Path to the lmdb data file.
 
     """
     def __init__(self, prototxt, caffemodel, meanfile, path_to_data):
@@ -121,18 +121,15 @@ class Network(object):
 
 
     def hessian(self, wanted_layers, maxrun=10000, with_bias=False):
-        """Example text text text text.
+        """Approx. hessian estimate.
 
         Text text text text text text text text text text text text text text 
         text text text text.
         
-        Note:
-          Text `self` text ``Args`` section.
-        
         Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
+          wanted_layers (List[str]): List containing layer names (eg [`conv1`]).\n
+          maxrun (Optional[int]): Number of images to use.
+          with_bias (Optinal[bool]): Toggle use of bias parameters.
         
         """
         lmdb_env = lmdb.open(self.path_to_data)
@@ -175,25 +172,19 @@ class Network(object):
     
         # Normalize
         trace /= maxrun
-    
         return trace
 
 
     def __config__(self):
-        """Example text text text text.
+        """Configure network.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
+        Defines a Caffe network with the specified configuration. The network 
+        is configured from the `self.prototxt` and `self.caffemodel` files.
         
         Note:
-          Text `self` text ``Args`` section.
-        
-        Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
-        
+          This functions creates a new instance of the network.        
         """
+        self.caffe_net = None
         self.caffe_net = caffe.Net(self.prototxt, self.caffemodel, caffe.TEST)
         
         # Construct transformation
@@ -206,19 +197,9 @@ class Network(object):
 
 
     def __mean_image__(self):
-        """Example text text text text.
+        """Mean image initialization.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
-        
-        Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
-        
+        Set the mean image of the data set.
         """
         mean_blobproto_new = caffe.proto.caffe_pb2.BlobProto()
         
@@ -229,19 +210,9 @@ class Network(object):
 
 
     def __list_params__(self):
-        """Example text text text text.
+        """(Trained) params (weights and bias).
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
-        
-        Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
-        
+        Returns the weights and biases of the network.
         """
         weights = [(k, v[0].data.shape) for k, v in self.caffe_net.params.items()]
         bias = [(k, v[1].data.shape) for k, v in self.caffe_net.params.items()]
@@ -249,37 +220,20 @@ class Network(object):
 
 
     def __list_blobs__(self):
-        """Example text text text text.
+        """Blob activations.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
-        
-        Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
-        
+        Returns the list of layers of the network.
         """
         return [(k, v.data.shape) for k, v in self.caffe_net.blobs.items()]
 
 
     def __params_flatten__(self, wanted_layers):
-        """Example text text text text.
+        """(Trained) params of `wanted_layers`.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
+        Returns a flatten list of parameters learned.
         
         Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
-        
+          wanted_alyers (List[str]): List of layer names.
         """
         weights = np.array([])
         bias = np.array([])
@@ -293,18 +247,12 @@ class Network(object):
 
 
     def __blob_flatten__(self, wanted_layers):
-        """Example text text text text.
+        """Blob activations of `wanted_layers`.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
+        Returns a flatten list of blob activations.
         
         Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
+          wanted_alyers (List[str]): List of layer names.
         
         """
         blob = list()
@@ -314,18 +262,14 @@ class Network(object):
 
 
     def __est_mean__(self, wanted_layers, with_bias=False):
-        """Example text text text text.
+        """Estimate mean of `wanted_layers`.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
+        Returns the estimated mean value of the listed layers in 
+        `wanted_layers`. Use `with_bias` to include bias.
         
         Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
+          wanted_layers (List[str]): List of layer names (eg. ['conv1']).\n
+          with_bias (Bool): Toggle bias.
         
         """
         weight, bias = self.__params_flatten__(wanted_layers)
@@ -337,18 +281,14 @@ class Network(object):
 
 
     def _est_std__(self, wanted_layers, with_bias=False):
-        """Example text text text text.
+        """Estimate std. of `wanted_layers`.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
+        Returns the estimated standard deviation of the listed layers in 
+        `wanted_layers`. Use `with_bias` to include bias.
         
         Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
+          wanted_layers (List[str]): List of layer names (eg. ['conv1']).\n
+          with_bias (Bool): Toggle bias.
         
         """
         weight, bias = self.__params_flatten__(wanted_layers)
@@ -360,18 +300,18 @@ class Network(object):
 
 
     def __gradients__(self, wanted_layers, with_bias=False):
-        """Example text text text text.
+        """Gradients of the `wanted_layers`.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
+        Returns the gradients calculated in an forward pass. Use `with_bias` to
+        specify if to return gradients of bias paramters.
         
         Note:
-          Text `self` text ``Args`` section.
+          Gradients are only calculated if the `.prototext` file contains the
+          additional `force_backwards=True` setting.
         
         Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
+          wanted_layers (List[str]): List containing layer names (eg [`conv1`]).\n
+          with_bias (Bool): Toggle bias.
         
         """
         jacobi = np.array([])
@@ -384,13 +324,6 @@ class Network(object):
         return jacobi
 
 
+#%%
 if __name__ == "__main__":
-	print 'This file contains the network class'
- 
-        model = '002'
-        prototxt = '/home/aaskov/caffe/examples/cifar10/cifar10_full_with_force_backward.prototxt'
-        caffemodel = '/home/aaskov/caffe/examples/cifar10/bkp_cifar10_full_converge_'+model+'/cifar10_full_iter_100000.caffemodel.h5'
-        mean_file = '/home/aaskov/caffe/examples/cifar10/mean.binaryproto'
-        path_to_data = '/home/aaskov/caffe/examples/cifar10/cifar10_train_lmdb/' 
-        
-        net = Network(prototxt, caffemodel, mean_file, path_to_data)
+    print 'This file contains the network class'

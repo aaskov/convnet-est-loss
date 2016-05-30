@@ -20,7 +20,7 @@ class Network(object):
     """Network class module.
 
     This class contains all the necessary settings and functions to setup and
-    run a convnet for experimentation.
+    run a convnet for experiments.
 
     Note:
         Text `self` text ``Args`` section.
@@ -33,20 +33,6 @@ class Network(object):
 
     """
     def __init__(self, prototxt, caffemodel, meanfile, path_to_data):
-        """Example text text text text.
-
-        Text text text text text text text text text text text text text text
-        text text text text.
-        
-        Note:
-          Text `self` text ``Args`` section.
-        
-        Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
-        
-        """
         self.prototxt = prototxt
         self.caffemodel = caffemodel
         self.meanfile = meanfile
@@ -58,18 +44,17 @@ class Network(object):
 
 
     def forward(self, maxrun=10000, k=5, post=1000):
-        """Example text text text text.
+        """Network forward push.
 
-        Text text text text text text text text text text text text text text 
-        text text text text.
+        Push data set through network.
         
         Note:
-          Text `self` text ``Args`` section.
+          Use `maxrun` to determine how many images to push through.
         
         Args:
-          param1 (str): Text of `param1`.
-          param2 (Optional[int]): Text of `param2`.
-          param3 (List[str]): Text of `param3`.
+          maxrun (Optinal[int]): Maximum nnumber of images to pass through.\n
+          k (Optional[int]): Define how many predictions to include in `top k`.\n
+          post (Optinal[int]): When to post.
         
         """
         lmdb_env = lmdb.open(self.path_to_data)
@@ -80,8 +65,8 @@ class Network(object):
         # Loop stats
         count = 0
         accuracy = 0.0
-        top1_error = 0.0
-        top5_error = 0.0
+        top_1_error = 0.0
+        top_k_error = 0.0
         
         for key, value in lmdb_cursor:
             t = time.time()        
@@ -103,8 +88,8 @@ class Network(object):
             # Stats
             iscorrect = predict_label == label
             accuracy += (1 if iscorrect else 0)
-            top1_error += (0 if label == top_inds[0] else 1)
-            top5_error += (0 if label in top_inds[:k] else 1)
+            top_1_error += (0 if label == top_inds[0] else 1)
+            top_k_error += (0 if label in top_inds[:k] else 1)
             
             count += 1
             if count % post == 0:
@@ -114,13 +99,13 @@ class Network(object):
         
         # Normalize
         accuracy /= count
-        top1_error /= count
-        top5_error /= count        
+        top_1_error /= count
+        top_k_error /= count        
         
-        return((accuracy, top1_error, top5_error))
+        return((accuracy, top_1_error, top_k_error))
 
 
-    def hessian(self, wanted_layers, maxrun=10000, with_bias=False):
+    def get_hessian(self, wanted_layers, maxrun=10000, post=1000, with_bias=False):
         """Approx. hessian estimate.
 
         Text text text text text text text text text text text text text text 
@@ -128,7 +113,8 @@ class Network(object):
         
         Args:
           wanted_layers (List[str]): List containing layer names (eg [`conv1`]).\n
-          maxrun (Optional[int]): Number of images to use.
+          maxrun (Optional[int]): Number of images to use.\n
+          post (Optional[int]): When to post.\n
           with_bias (Optinal[bool]): Toggle use of bias parameters.
         
         """
@@ -138,11 +124,10 @@ class Network(object):
         datum = caffe.proto.caffe_pb2.Datum()
     
         # For pre-config
-        diff = self.__gradients__(self.caffe_net, wanted_layers, with_bias)
+        diff = self.__gradients__(wanted_layers, with_bias)
         trace = np.zeros_like(diff)
     
         # Loop over images
-        post = 1000
         count = 0
         for key, value in lmdb_cursor:
             t = time.time()
@@ -194,6 +179,36 @@ class Network(object):
         # Apply
         transformer.set_mean('data', self.mean_image[0].mean(1).mean(1))
         transformer.set_raw_scale('data', 255)
+    
+    
+    def __add_damage__(self, wanted_layer, std, with_bias=False):
+        """Add Gaussian noise to the layers.
+
+        Add Gaussian noise to the layers defined in `wanted_layers`. Use `std`
+        to control the standard deviation of the Gaussian noise.
+        
+        Args:
+          wanted_layer (List[str]): List containing layer names (eg [`conv1`]).\n
+          std (float): Scale of the applied noise.\n
+          with_bias (Optinal[bool]): Toggle use of bias parameters.
+        
+        """
+        # Get the layer std
+        net_std = self.__est_std__(wanted_layer, with_bias)
+        
+        for layer, dim in self.caffe_net.params.items():
+            if layer in wanted_layer:
+                weight_shape = dim[0].data.shape
+                bias_shape = dim[1].data.shape
+    
+                # Design damage (here white noise)
+                weight_noise = np.random.normal(0.0, net_std*std, weight_shape)
+                bias_noise = np.random.normal(0.0, net_std*std, bias_shape)
+    
+                # Apply
+                self.caffe_net.params[layer][0].data[:] += weight_noise
+                if with_bias:                
+                    self.caffe_net.params[layer][1].data[:] += bias_noise
 
 
     def __mean_image__(self):
@@ -280,7 +295,7 @@ class Network(object):
         return np.mean(values)
 
 
-    def _est_std__(self, wanted_layers, with_bias=False):
+    def __est_std__(self, wanted_layers, with_bias=False):
         """Estimate std. of `wanted_layers`.
 
         Returns the estimated standard deviation of the listed layers in 
@@ -327,3 +342,6 @@ class Network(object):
 #%%
 if __name__ == "__main__":
     print 'This file contains the network class'
+
+    caffe.set_mode_cpu()
+    net = Network(prototxt='/home/aaskov/caffe/examples/cifar10/cifar10_full.prototxt', caffemodel='/home/aaskov/caffe/examples/cifar10/bkp_cifar10_full_converge_002/cifar10_full_iter_100000.caffemodel.h5', meanfile='/home/aaskov/caffe/examples/cifar10/mean.binaryproto', path_to_data='/home/aaskov/caffe/examples/cifar10/cifar10_train_lmdb/')

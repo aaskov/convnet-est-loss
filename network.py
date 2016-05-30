@@ -67,14 +67,17 @@ class Network(object):
         accuracy = 0.0
         top_1_error = 0.0
         top_k_error = 0.0
+        loss = 0.0
         
         for key, value in lmdb_cursor:
             t = time.time()        
             
-            # Extract the image from the LMDB dataset
+            # Extract the image from the LMDB dataset          
+            datum = caffe.proto.caffe_pb2.Datum()
             datum.ParseFromString(value)
             label = int(datum.label)
             input_image = caffe.io.datum_to_array(datum)
+            input_image = input_image.astype(np.uint8)
     
             # Insert into the network
             self.caffe_net.blobs['data'].data[...] = input_image
@@ -84,6 +87,11 @@ class Network(object):
             predict_label = int(net_out['prob'][0].argmax(axis=0))
             output_prob = self.caffe_net.blobs['prob'].data[0]
             top_inds = output_prob.argsort()[::-1][:k]
+            
+            # Get loss
+            target = np.zeros_like(net_out['prob'][0])
+            target[label] = 1.0  # Suggested by Caffe community
+            loss += target.dot(np.log(net_out['prob'][0]))
             
             # Stats
             iscorrect = predict_label == label
@@ -100,9 +108,10 @@ class Network(object):
         # Normalize
         accuracy /= count
         top_1_error /= count
-        top_k_error /= count        
+        top_k_error /= count 
+        loss /= count
         
-        return((accuracy, top_1_error, top_k_error))
+        return((accuracy, top_1_error, top_k_error, (-1)*loss))
 
 
     def get_hessian(self, wanted_layers, maxrun=10000, post=1000, with_bias=False):

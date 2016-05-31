@@ -3,6 +3,7 @@
 convnet-est-loss
 """
 import numpy as np
+from os import sys, path
 import argparse
 caffe_dir = '/home/aaskov/caffe/'
 
@@ -51,15 +52,14 @@ def run():
         loss_list.append(loss)
 
     # Store result
-    save_obj(loss_list, 'experiment_damage_' + str(args.damage) + '_step_' + 
-             str(args.step_num) + '_iter_' + str(args.iterations))
+    save_obj(loss_list, 'experiment_damage_' + str(args.layer) + '_' + 
+            str(args.damage) + '_step_' + str(args.step_num) + '_iter_' + 
+            str(args.iterations))
     
 
 
 #%%
 if __name__ == '__main__' and __package__ is None:
-    from os import sys, path
-
     # Append parrent directory to sys path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     from network import Network

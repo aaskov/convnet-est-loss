@@ -151,7 +151,7 @@ class Network(object):
             self._forward = self.caffe_net.forward()
     
             # Backward to compute gradients
-            self.caffe_net.blobs['prob'].diff[0][label] = 1  # Suggested from caffe-users google forum
+            self.caffe_net.blobs['prob'].diff[0][label] = 1  # Suggested from the Caffe-users google forum
             self._backward = self.caffe_net.backward(**{self.caffe_net.outputs[0]: self.caffe_net.blobs['prob'].diff})
     
             # Calculate the derivatices and store the approx Hessian

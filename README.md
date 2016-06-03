@@ -28,3 +28,6 @@ pythhon experiment/experiment_damage.py --help
 pythhon experiment/experiment_estimate_loss.py --help
 ```
 
+License
+-----
+MIT

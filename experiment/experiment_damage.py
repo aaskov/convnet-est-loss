@@ -29,6 +29,8 @@ def run():
                         help='Data.')
     parser.add_argument('--layer', required=True, type=str,
                         help='Layer to apply damage to.')
+    parser.add_argument('--prefix', required=True, type=str,
+                        help='Uniqe model name.')
     parser.add_argument('--damage', default=1.0, type=damage_range,
                         help='Applied damage range.')
     parser.add_argument('--step-num', default=10, type=int,
@@ -36,6 +38,11 @@ def run():
     parser.add_argument('--iterations', default=100, type=int,
                         help='Number of iterations to run.')
     args = parser.parse_args()
+    
+    # Object file
+    obj = 'experiment_damage_' + str(args.layer) + '_' + str(args.damage)
+    obj += '_step_' + str(args.step_num) + '_iter_' + str(args.iterations)
+    obj += '_prefix_' + str(args.prefix)
 
     loss_list = list()
     for std in np.linspace(0.0, args.damage, args.step_num):
@@ -52,10 +59,7 @@ def run():
         loss_list.append(_loss)
 
     # Store result
-    save_obj(np.array(loss_list), 'experiment_damage_' +
-                                  str(args.layer) + '_' + str(args.damage) +
-                                  '_step_' + str(args.step_num) + '_iter_' +
-                                  str(args.iterations))
+    save_obj(np.array(loss_list), obj)
 
 
 if __name__ == '__main__' and __package__ is None:

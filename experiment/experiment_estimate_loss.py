@@ -30,6 +30,8 @@ def run():
                         help='Data.')
     parser.add_argument('--layer', required=True, type=str,
                         help='Layer to apply damage to.')
+    parser.add_argument('--prefix', required=True, type=str,
+                        help='Uniqe model name.')
     parser.add_argument('--damage', default=1.0, type=damage_interval,
                         help='Applied damage range.')
     parser.add_argument('--step-num', default=10, type=int,
@@ -43,6 +45,7 @@ def run():
     # Object file
     obj = 'experiment_damage_' + str(args.layer) + '_' + str(args.damage)
     obj += '_step_' + str(args.step_num) + '_iter_' + str(args.iterations)
+    obj += '_prefix_' + str(args.prefix)
 
     # If file not exists
     if not path.isfile(obj + '.pkl'):

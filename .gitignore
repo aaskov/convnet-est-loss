@@ -21,3 +21,5 @@ pip-log.txt
 # Data
 *.dat
 *.pkl
+*.caffemodel
+*.solverstate

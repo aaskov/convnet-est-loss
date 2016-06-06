@@ -37,6 +37,8 @@ def run():
                         help='Number of steps in damage interval.')
     parser.add_argument('--iterations', default=100, type=int,
                         help='Number of iterations to run.')
+    parser.add_argument('--repeat', default=0, type=int,
+                        help='Number of repeated experiments to run.')
     args = parser.parse_args()
     
     # Object file
@@ -47,7 +49,7 @@ def run():
     loss_list = list()
     for std in np.linspace(0.0, args.damage, args.step_num):
         _loss = list()
-        for repeat in range(args.repeat + 1):
+        for t in range(args.repeat + 1):
             # Fetch a network structure and apply damage
             net = Network(args.proto, args.model, args.meanfile, args.data)
             net.__add_damage__(args.layer, std)

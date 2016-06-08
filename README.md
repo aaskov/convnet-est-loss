@@ -23,8 +23,8 @@ python experiment_estimate_loss.py --proto ..model/cifar10/cifar10_full.prototxt
 ```
 For more detail see
 ```bash
-pythhon experiment/experiment_damage.py --help
-pythhon experiment/experiment_estimate_loss.py --help
+python experiment/experiment_damage.py --help
+python experiment/experiment_estimate_loss.py --help
 ```
 
 License

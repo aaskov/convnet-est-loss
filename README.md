@@ -5,7 +5,7 @@ The code used in the 'Estimating the expected loss value in a Deep Neural Networ
 Requirements
 -----
 * Caffe (http://caffe.berkeleyvision.org/) -- Latest version is recommended
-* NumPy (http://www.numpy.org/) -- `sudo apt-get install python-numpy`
+* NumPy (http://numpy.org/) -- `sudo apt-get install python-numpy`
 * Matplotlib (http://matplotlib.org/) -- `sudo apt-get install python-matplotlib`
 
 Installation

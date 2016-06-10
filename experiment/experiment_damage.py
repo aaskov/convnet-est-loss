@@ -11,7 +11,7 @@ caffe_dir = '/home/aaskov/caffe/'
 def damage_range(x):
     if float(x) < 0.0:
         raise argparse.ArgumentTypeError("%r is not positive" % x)
-    return x
+    return float(x)
 
 
 def run():

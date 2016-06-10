@@ -9,6 +9,7 @@ python experiment_damage.py \
 	--meanfile ../model/cifar10/mean.binaryproto \
 	--data ..data/cifar10/cifar10_train_lmdb/ \
 	--layer conv1 \
+	--prefix 000 \
 	--iterations 50000 \
 	--damage 1.0 \
 	--repeat 0
@@ -19,7 +20,8 @@ python experiment_damage.py \
 	--model ../model/cifar10/cifar10_full_iter_200000.caffemodel \
 	--meanfile ../model/cifar10/mean.binaryproto \
 	--data ..data/cifar10/cifar10_train_lmdb/ \
-	--layer conv1 \
+	--layer conv2 \
+	--prefix 000 \
 	--iterations 50000 \
 	--damage 1.0 \
 	--repeat 0
@@ -31,7 +33,8 @@ python experiment_damage.py \
 	--model ../model/cifar10/cifar10_full_iter_200000.caffemodel \
 	--meanfile ../model/cifar10/mean.binaryproto \
 	--data ..data/cifar10/cifar10_train_lmdb/ \
-	--layer conv1 \
+	--layer conv3 \
+	--prefix 000 \
 	--iterations 50000 \
 	--damage 1.0 \
 	--repeat 0
@@ -43,7 +46,8 @@ python experiment_damage.py \
 	--model ../model/cifar10/cifar10_full_iter_200000.caffemodel \
 	--meanfile ../model/cifar10/mean.binaryproto \
 	--data ..data/cifar10/cifar10_train_lmdb/ \
-	--layer conv1 \
+	--layer ip1 \
+	--prefix 000 \
 	--iterations 50000 \
 	--damage 1.0 \
 	--repeat 0

@@ -61,14 +61,19 @@ def run():
         loss_list.append(_loss)
 
     # Store result
-    save_obj(np.array(loss_list), obj)
+    if path.exists(obj+'.pkl'):
+        read_loss = load_obj(obj)
+        combined = np.concatenate((read_loss, np.array(loss_list)), 1)
+        save_obj(combined, obj)
+    else:        
+        save_obj(np.array(loss_list), obj)
 
 
 if __name__ == '__main__' and __package__ is None:
     # Append parrent directory to sys path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     from network import Network
-    from input_output import save_obj
+    from input_output import save_obj, load_obj
 
     # Setup Caffe
     sys.path.insert(0, caffe_dir + 'python')

@@ -1,6 +1,6 @@
 ConvNet estimation of loss
 =============
-The code used in the 'Estimating the expected loss value in a Deep Neural Network using Gauss-Newton hessian approximation' paper.
+The code used in the 'On the resilience of deep neural networks to weight damage' paper.
 
 Requirements
 -----
